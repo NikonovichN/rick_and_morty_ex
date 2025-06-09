@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rick_and_morty_ex/src/features/rick_and_morty/ui.dart';
 
 import '../ui_kit/ui_kit.dart';
 
@@ -13,7 +14,7 @@ class _BottomNavigationBarWithScaffoldState extends State<BottomNavigationBarWit
   static const _rickAndMortyPageTitle = 'Rick And Morty Fun';
   static const _favoritesPageTitle = 'Favorites';
   static const List<Widget> _widgetOptions = <Widget>[
-    Text('Index 0: API'),
+    RickAndMortyScreen(),
     Text('Index 1: Favorites'),
   ];
   static const _pageTitles = [_rickAndMortyPageTitle, _favoritesPageTitle];
