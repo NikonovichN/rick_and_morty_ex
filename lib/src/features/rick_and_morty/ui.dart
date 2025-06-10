@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
-import 'package:rick_and_morty_ex/src/ui_kit/organism/character_card.dart';
 import 'package:rxdart/rxdart.dart';
 
+import '../../ui_kit/ui_kit.dart';
 import '../favorites/favorites.dart';
 import 'repository.dart';
 import 'controller.dart';
@@ -44,7 +44,7 @@ class _RickAndMortyScreenState extends State<RickAndMortyScreen> {
         },
       ),
       builder: (context, snapshot) {
-        final refreshButton = _TryToRefreshButton(
+        final refreshButton = TryToRefreshButton(
           onPressed: () {
             _favoritesController.read();
             _rickAndMortyController.loadData(refresh: true);
@@ -91,27 +91,6 @@ class _RickAndMortyScreenState extends State<RickAndMortyScreen> {
           },
         );
       },
-    );
-  }
-}
-
-class _TryToRefreshButton extends StatelessWidget {
-  static const _text = 'Try to refresh';
-  final void Function()? onPressed;
-  const _TryToRefreshButton({required this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Center(
-      child: ElevatedButton(
-        style: ButtonStyle(backgroundColor: WidgetStateProperty.all(colorScheme.primary)),
-        onPressed: onPressed,
-        child: DefaultTextStyle.merge(
-          style: TextStyle(color: colorScheme.onPrimary),
-          child: Text(_text),
-        ),
-      ),
     );
   }
 }

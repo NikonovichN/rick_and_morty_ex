@@ -38,7 +38,7 @@ class FavoritesRepositoryImpl implements FavoritesRepository {
 
   @override
   Future<void> remove({required String id}) async {
-    List newDataBox = List.from(characters)..removeWhere((c) => c.id == id);
+    List newDataBox = characters..removeWhere((c) => c.id == id);
     await _box.put(FavoritesRepository.boxKey, newDataBox.map((c) => c.toMap()).toList());
   }
 }
