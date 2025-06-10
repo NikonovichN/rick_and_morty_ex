@@ -2,10 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
-
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:rick_and_morty_ex/src/features/rick_and_morty/repository.dart';
 
 import 'src/features/features.dart';
 import 'src/rick_and_morty_app.dart';
@@ -19,7 +17,7 @@ void main() {
       WidgetsFlutterBinding.ensureInitialized();
       await Hive.initFlutter();
 
-      final themeProvider = ThemeRepositoryImpl(box: await Hive.openBox(ThemeRepository.boxKey));
+      final themeRepository = ThemeRepositoryImpl(box: await Hive.openBox(ThemeRepository.boxKey));
 
       final rickAndMortyBox = await Hive.openBox<Map<dynamic, dynamic>>(
         RickAndMortyRepository.boxKey,
@@ -31,11 +29,18 @@ void main() {
         ),
       );
 
+      final favoritesRepository = FavoritesRepositoryImpl(
+        box: await Hive.openBox<List<dynamic>>(FavoritesRepository.boxKey),
+      );
+      final favoritesController = FavoritesControllerImpl(repository: favoritesRepository);
+
       return runApp(
         MultiProvider(
           providers: [
-            ChangeNotifierProvider<ThemeRepository>.value(value: themeProvider),
+            ChangeNotifierProvider<ThemeRepository>.value(value: themeRepository),
             Provider<RickAndMortyRepository>.value(value: rickAndMortyRepositoryProvider),
+            Provider<FavoritesRepository>.value(value: favoritesRepository),
+            Provider<FavoritesController>.value(value: favoritesController),
           ],
           child: RickAndMorty(),
         ),

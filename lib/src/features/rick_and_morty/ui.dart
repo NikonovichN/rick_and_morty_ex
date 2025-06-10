@@ -1,58 +1,93 @@
 import 'package:flutter/material.dart';
 
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import 'package:rick_and_morty_ex/src/ui_kit/organism/character_card.dart';
+import 'package:rxdart/rxdart.dart';
 
+import '../favorites/favorites.dart';
 import 'repository.dart';
-import 'entity.dart';
 import 'controller.dart';
 
-class RickAndMortyScreen extends StatelessWidget {
+class RickAndMortyScreen extends StatefulWidget {
   const RickAndMortyScreen({super.key});
 
   @override
+  State<RickAndMortyScreen> createState() => _RickAndMortyScreenState();
+}
+
+class _RickAndMortyScreenState extends State<RickAndMortyScreen> {
+  late final RickAndMortyRepository _repositoryRickAndMorty;
+  late final RickAndMortyScreenController _rickAndMortyController;
+  late final FavoritesController _favoritesController;
+
+  @override
+  void initState() {
+    super.initState();
+    _repositoryRickAndMorty = context.read<RickAndMortyRepository>();
+    _rickAndMortyController = RickAndMortyScreenControllerImpl(repository: _repositoryRickAndMorty);
+    _favoritesController = context.read<FavoritesController>();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _favoritesController.read();
+      _rickAndMortyController.loadData();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final repository = context.read<RickAndMortyRepository>();
-    final screenController = RickAndMortyScreenControllerImpl(repository: repository);
-
-    screenController.loadData();
-
-    return StreamBuilder<RickAndMortyScreenState>(
-      stream: screenController.stream,
+    return StreamBuilder(
+      stream: CombineLatestStream.combine2(
+        _rickAndMortyController.stream,
+        _favoritesController.stream,
+        (rickAndMortyState, favoritesState) {
+          return (rickAndMortyState, favoritesState);
+        },
+      ),
       builder: (context, snapshot) {
         final refreshButton = _TryToRefreshButton(
-          onPressed: () => screenController.loadData(refresh: true),
+          onPressed: () {
+            _favoritesController.read();
+            _rickAndMortyController.loadData(refresh: true);
+          },
         );
 
-        if (snapshot.data == null || snapshot.data!.error != null) {
+        final rickAndMortyState = snapshot.data?.$1;
+
+        if (snapshot.data == null || rickAndMortyState?.error != null) {
           return refreshButton;
         }
 
-        final state = snapshot.data!;
+        rickAndMortyState!;
+        final favoriteState = snapshot.data!.$2;
 
-        if (state.isLoading) {
+        if (rickAndMortyState.isLoading) {
           return Center(child: CircularProgressIndicator());
         }
 
         return ListView.builder(
-          itemCount: (state.characters?.length ?? 0) + 1,
+          itemCount: (rickAndMortyState.characters?.length ?? 0) + 1,
           itemBuilder: (context, index) {
-            if (state.characters == null) {
+            if (rickAndMortyState.characters == null) {
               return refreshButton;
             }
 
-            if (index == state.characters!.length) {
-              if (state.inProcess) {
+            if (index == rickAndMortyState.characters!.length) {
+              if (rickAndMortyState.inProcess) {
                 return const Center(child: CircularProgressIndicator());
               } else {
-                screenController.loadData();
+                _rickAndMortyController.loadData();
                 return const SizedBox.shrink();
               }
             }
 
-            final character = state.characters![index];
+            final character = rickAndMortyState.characters![index];
 
-            return _CharacterCard(value: character);
+            return CharacterCard(
+              value: character,
+              isSelected: favoriteState.characters != null
+                  ? favoriteState.characters!.contains(character)
+                  : false,
+            );
           },
         );
       },
@@ -76,61 +111,6 @@ class _TryToRefreshButton extends StatelessWidget {
           style: TextStyle(color: colorScheme.onPrimary),
           child: Text(_text),
         ),
-      ),
-    );
-  }
-}
-
-class _CharacterCard extends StatelessWidget {
-  final Character value;
-  final VoidCallback? onAddToFavorite;
-  const _CharacterCard({required this.value, this.onAddToFavorite});
-
-  static const _padding = EdgeInsets.all(20.0);
-  static const _margin = EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0);
-  static const _borderRadius = BorderRadius.all(Radius.circular(10.0));
-  static const _emptyHeightM = SizedBox(height: 8.0);
-  static const _emptyHeightS = SizedBox(height: 4.0);
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: _padding,
-      margin: _margin,
-      decoration: BoxDecoration(color: colorScheme.primary, borderRadius: _borderRadius),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          ClipRRect(
-            borderRadius: _borderRadius,
-            child: CachedNetworkImage(
-              imageUrl: value.image,
-              progressIndicatorBuilder: (context, url, progress) =>
-                  const Center(child: CircularProgressIndicator()),
-              height: 120,
-              fit: BoxFit.cover,
-            ),
-          ),
-          SizedBox(width: 12.0),
-          DefaultTextStyle.merge(
-            style: TextStyle(color: colorScheme.onPrimary),
-            child: Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(value.name, style: TextStyle(fontSize: 22)),
-                  _emptyHeightM,
-                  Text(value.gender, style: TextStyle(fontSize: 14)),
-                  _emptyHeightS,
-                  Text(value.status, style: TextStyle(fontSize: 14)),
-                  _emptyHeightS,
-                  Text(value.location.name, style: TextStyle(fontSize: 14)),
-                ],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

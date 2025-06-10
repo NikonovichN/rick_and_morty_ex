@@ -44,7 +44,7 @@ class RickAndMortyScreenState extends Equatable {
 }
 
 abstract class RickAndMortyScreenController {
-  Future<void> loadData();
+  Future<void> loadData({bool refresh});
   Stream<RickAndMortyScreenState> get stream;
   RickAndMortyScreenState get state;
 }
