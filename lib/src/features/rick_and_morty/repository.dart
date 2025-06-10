@@ -1,11 +1,12 @@
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+
+import 'entity.dart';
 
 abstract class RickAndMortyRepository {
   static const boxKey = 'rickAndMortyBox';
   static const endPoint = 'https://rickandmortyapi.com/graphql';
 
-  Future<dynamic> fetch();
+  Future<List<Character>> fetch();
 }
 
 class RickAndMortyRepositoryImpl implements RickAndMortyRepository {
@@ -15,29 +16,30 @@ class RickAndMortyRepositoryImpl implements RickAndMortyRepository {
     : _graphQLClient = graphQLClient;
 
   @override
-  Future<dynamic> fetch() async {
-    final qcResponse = await _graphQLClient.query(
+  Future<List<Character>> fetch() async {
+    final response = await _graphQLClient.query(
       QueryOptions(
         document: gql(r'''
-            query {
-              characters(page: 2, filter: { name: "rick" }) {
-                info {
-                  count
-                }
+           query {
+              characters(page: 1) {
                 results {
+                  id
                   name
+                  image
+                  location {
+                    id
+                    name
+                  }
+                  status
+                  type
+                  gender
                 }
-              }
-              location(id: 1) {
-                id
-              }
-              episodesByIds(ids: [1, 2]) {
-                id
               }
             }
           '''),
       ),
     );
-    print('');
+    final results = List.castFrom(response.data?['characters']['results']);
+    return results.map((e) => Character.fromJson(e)).toList();
   }
 }
