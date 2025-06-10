@@ -61,6 +61,8 @@ class FavoritesControllerImpl with AppLogger implements FavoritesController {
   @override
   FavoritesState get state => _state;
 
+  SortType? _lastTypeSort;
+
   void emit(FavoritesState newState) {
     _state = newState;
     _controller.add(newState);
@@ -104,14 +106,24 @@ class FavoritesControllerImpl with AppLogger implements FavoritesController {
   @override
   void sortBy({SortType type = SortType.name}) {
     if (state.characters != null && state.characters!.isNotEmpty) {
-      state.characters!.sort((a, b) {
-        return switch (type) {
-          SortType.name => b.name.toLowerCase().compareTo(b.name.toLowerCase()),
-          SortType.gender => b.gender.toLowerCase().compareTo(b.gender.toLowerCase()),
-          SortType.status => b.status.toLowerCase().compareTo(b.status.toLowerCase()),
-        };
-      });
-      emit(state.copyWith(inProcess: false, characters: state.characters!));
+      final reverse = _lastTypeSort == type;
+      final List<Character> sortedCharacters = List.from(
+        state.characters!..sort((a, b) {
+          return switch (type) {
+            SortType.name => reverse ? compareTo(a.name, b.name) : compareTo(b.name, a.name),
+            SortType.gender =>
+              reverse ? compareTo(a.gender, b.gender) : compareTo(b.gender, a.gender),
+            SortType.status =>
+              reverse ? compareTo(a.status, b.status) : compareTo(b.status, a.status),
+          };
+        }),
+      );
+      _lastTypeSort = reverse ? null : type;
+      emit(state.copyWith(inProcess: false, characters: sortedCharacters));
     }
+  }
+
+  int compareTo(String v1, String v2) {
+    return v2.toLowerCase().compareTo(v1.toLowerCase());
   }
 }
