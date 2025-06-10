@@ -8,13 +8,16 @@ import 'ui_kit/ui_kit.dart';
 class RickAndMorty extends StatelessWidget {
   const RickAndMorty({super.key});
 
+  static const _titleApp = 'Rick And Morty App';
+
   @override
   Widget build(BuildContext context) {
     final themeRepo = context.watch<ThemeRepository>();
     final isDarkTheme = themeRepo.isDarkMode;
 
     return MaterialApp(
-      title: 'Rick And Morty App',
+      title: _titleApp,
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(colorScheme: isDarkTheme ? AppDarkColorScheme() : AppLightColorScheme()),
       home: BottomNavigationBarWithScaffold(),
     );

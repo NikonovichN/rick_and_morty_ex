@@ -1,44 +1,44 @@
 import 'dart:async';
 
 import 'package:equatable/equatable.dart';
+import 'package:flutter/rendering.dart';
 
+import 'entity.dart';
 import '../../common/common.dart';
 import 'repository.dart';
-
-class RickAndMortyScreenData extends Equatable {
-  const RickAndMortyScreenData();
-
-  @override
-  List<Object?> get props => [];
-}
 
 class RickAndMortyScreenState extends Equatable {
   final bool isLoading;
   final bool inProcess;
-  final RickAndMortyScreenData? screenData;
+  final List<Character>? characters;
   final RepositoryException? error;
+  final int lastUpdate;
 
   const RickAndMortyScreenState({
     required this.isLoading,
     required this.inProcess,
-    this.screenData,
+    this.characters,
     this.error,
+    this.lastUpdate = 0,
   });
 
   @override
-  List<Object?> get props => [isLoading, inProcess, screenData, error];
+  List<Object?> get props => [isLoading, inProcess, characters, error];
+
+  int get lastUpdateGetter => DateTime.now().millisecondsSinceEpoch;
 
   RickAndMortyScreenState copyWith({
     required bool inProcess,
     required bool isLoading,
-    RickAndMortyScreenData? screenData,
-    RepositoryException? error,
+    List<Character>? characters,
+    ValueGetter<RepositoryException>? errorGetter,
   }) {
     return RickAndMortyScreenState(
       inProcess: inProcess,
       isLoading: isLoading,
-      screenData: screenData ?? this.screenData,
-      error: error ?? this.error,
+      characters: characters ?? this.characters,
+      error: errorGetter != null ? errorGetter() : null,
+      lastUpdate: lastUpdateGetter,
     );
   }
 }
@@ -66,6 +66,8 @@ class RickAndMortyScreenControllerImpl with AppLogger implements RickAndMortyScr
   @override
   RickAndMortyScreenState get state => _state;
 
+  int pageToLoad = 0;
+
   void emit(RickAndMortyScreenState newState) {
     _state = newState;
     _controller.add(newState);
@@ -77,14 +79,31 @@ class RickAndMortyScreenControllerImpl with AppLogger implements RickAndMortyScr
       return;
     }
 
-    emit(_state.copyWith(isLoading: true, inProcess: false, error: null));
+    final stateCharactersIsEmpty = state.characters == null || state.characters?.isEmpty == true;
+
+    emit(
+      _state.copyWith(
+        isLoading: stateCharactersIsEmpty || refresh,
+        inProcess: !stateCharactersIsEmpty,
+        errorGetter: null,
+      ),
+    );
 
     try {
-      final repositoryData = await _repository.fetch();
+      if (refresh && state.characters != null) {
+        pageToLoad = 0;
+        state.characters!.clear();
+      }
 
-      info(repositoryData.toString());
+      pageToLoad += 1;
+      final charactersResponse = await _repository.fetch(page: pageToLoad);
 
-      emit(_state.copyWith(isLoading: false, inProcess: false));
+      info(charactersResponse.toString());
+
+      List<Character> characters = List.from(state.characters ?? []);
+      characters.addAll(charactersResponse);
+
+      emit(_state.copyWith(isLoading: false, inProcess: false, characters: characters));
     } catch (e) {
       final errorString = e.toString();
 
@@ -93,7 +112,7 @@ class RickAndMortyScreenControllerImpl with AppLogger implements RickAndMortyScr
         _state.copyWith(
           isLoading: false,
           inProcess: false,
-          error: RepositoryException(message: errorString),
+          errorGetter: () => RepositoryException(message: errorString),
         ),
       );
     }
