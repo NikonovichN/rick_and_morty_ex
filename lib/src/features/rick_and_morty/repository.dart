@@ -1,7 +1,7 @@
 import 'package:graphql_flutter/graphql_flutter.dart';
-import 'package:rick_and_morty_ex/src/common/common.dart';
 
 import 'entity.dart';
+import '../../common/common.dart';
 
 abstract class RickAndMortyRepository {
   static const boxKey = 'rickAndMortyBox';
@@ -17,9 +17,9 @@ class RickAndMortyRepositoryImpl with AppLogger implements RickAndMortyRepositor
     : _graphQLClient = graphQLClient;
 
   late QueryResult<Object?> _lastResult;
-  static final _document = gql(r'''
+  getDocument(int page) => gql('''
            query {
-              characters(page: 1) {
+              characters(page: $page) {
                 results {
                   id
                   name
@@ -38,9 +38,10 @@ class RickAndMortyRepositoryImpl with AppLogger implements RickAndMortyRepositor
 
   @override
   Future<List<Character>> fetch({required int page}) async {
+    final document = getDocument(page);
     final originalOptions = QueryOptions(
       fetchPolicy: FetchPolicy.cacheAndNetwork,
-      document: _document,
+      document: document,
       onError: (e) {
         error(e.toString());
       },
@@ -48,11 +49,7 @@ class RickAndMortyRepositoryImpl with AppLogger implements RickAndMortyRepositor
     _lastResult = page <= 1
         ? await _graphQLClient.query(originalOptions)
         : await _graphQLClient.fetchMore(
-            FetchMoreOptions(
-              variables: {'page': page},
-              document: _document,
-              updateQuery: (prev, next) => {...prev ?? {}, ...next ?? {}},
-            ),
+            FetchMoreOptions(document: document, updateQuery: (prev, next) => {...next ?? {}}),
             originalOptions: originalOptions,
             previousResult: _lastResult,
           );
