@@ -26,6 +26,8 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textButtonStyle = TextStyle(color: colorScheme.onSurface);
     return Column(
       children: [
         Padding(
@@ -36,15 +38,15 @@ class _FavoritesScreenState extends State<FavoritesScreen> {
               Text('Sort:'),
               TextButton(
                 onPressed: () => _favoritesController.sortBy(type: SortType.name),
-                child: Text('By Name'),
+                child: Text('By Name', style: textButtonStyle),
               ),
               TextButton(
                 onPressed: () => _favoritesController.sortBy(type: SortType.gender),
-                child: Text('By Gender'),
+                child: Text('By Gender', style: textButtonStyle),
               ),
               TextButton(
                 onPressed: () => _favoritesController.sortBy(type: SortType.status),
-                child: Text('By Status'),
+                child: Text('By Status', style: textButtonStyle),
               ),
             ],
           ),
