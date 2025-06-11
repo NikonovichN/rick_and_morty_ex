@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:rick_and_morty_ex/src/features/rick_and_morty/ui.dart';
 
+import '../features/features.dart';
 import '../ui_kit/ui_kit.dart';
 
 class BottomNavigationBarWithScaffold extends StatefulWidget {
@@ -13,10 +13,7 @@ class BottomNavigationBarWithScaffold extends StatefulWidget {
 class _BottomNavigationBarWithScaffoldState extends State<BottomNavigationBarWithScaffold> {
   static const _rickAndMortyPageTitle = 'Rick And Morty Fun';
   static const _favoritesPageTitle = 'Favorites';
-  static const List<Widget> _widgetOptions = <Widget>[
-    RickAndMortyScreen(),
-    Text('Index 1: Favorites'),
-  ];
+  static const List<Widget> _widgetOptions = [RickAndMortyScreen(), FavoritesScreen()];
   static const _pageTitles = [_rickAndMortyPageTitle, _favoritesPageTitle];
 
   int _selectedIndex = 0;

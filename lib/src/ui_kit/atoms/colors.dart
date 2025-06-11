@@ -40,7 +40,7 @@ class AppDarkColorScheme extends ColorScheme {
         shadow: const Color.fromARGB(95, 83, 76, 76),
         primary: NamedColors.black,
         onPrimary: NamedColors.lemonChiffon,
-        secondary: NamedColors.secondary,
+        secondary: NamedColors.oldBurgundy,
         onSecondary: NamedColors.white,
         error: NamedColors.error,
         onError: NamedColors.white,
